@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { Line } from "vue-chartjs";
 import ChartService from "../service/chartService";
 import { Chart, registerables } from "chart.js";
@@ -24,6 +24,10 @@ const colors = [
 
 const selectedCoinData = ref("1DAY");
 const chartData = ref({});
+const lastUpdated = ref(null);
+const lastUpdatedDisplay = computed(() =>
+  lastUpdated.value ? new Date(lastUpdated.value).toLocaleString() : "Never"
+);
 
 const chartOptions = {
   responsive: true,
@@ -82,7 +86,12 @@ const fetchChartData = async () => {
       console.error("Error fetching chart data for " + coin.id, error);
     }
   }
+  lastUpdated.value = new Date();
 };
+
+watch(selectedCoinData, () => {
+  fetchChartData();
+});
 
 onMounted(() => {
   topCoins.value.forEach((coin, index) => {
@@ -118,7 +127,15 @@ function formatPrice(price) {
     <h1 className="font-bold text-white w-full text-center mb-4 text-3xl">
       Today's most popular coins chart
     </h1>
+    
 
+    <div class="w-full flex justify-center mb-4">
+      <select v-model="selectedCoinData" @change="fetchChartData" class="bg-[#121418] text-white p-2 rounded">
+        <option value="1DAY">1 hour (1DAY)</option>
+        <option value="7DAY">1 week (7DAY)</option>
+        <option value="1MTH">1 month (1MTH)</option>
+      </select>
+    </div>
     <div v-for="coin in topCoins" :key="coin.id" className="w-[45%] mb-6">
       <h2 class="text-white font-bold text-center mb-2">{{ coin.symbol }} Price</h2>
       <Line
@@ -129,6 +146,10 @@ function formatPrice(price) {
       <p v-else class="text-white text-center">
         Error fetching chart data for {{ coin.symbol }}
       </p>
+    </div>
+    <!-- Last updated timestamp -->
+    <div class="w-full text-center mt-2">
+      <p class="text-white">Last updated: {{ lastUpdatedDisplay }}</p>
     </div>
   </div>
 </template>
