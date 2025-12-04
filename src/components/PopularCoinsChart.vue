@@ -71,8 +71,6 @@ const fetchChartData = async () => {
           datasets: [
             {
               label: `${coin.symbol} Цена во USD`,
-              backgroundColor: coinColors2.value[coin.id].backgroundColor,
-              borderColor: coinColors2.value[coin.id].borderColor,
               borderWidth: 2,
               fill: true,
               data: prices.map((entry) => entry.price),
@@ -89,10 +87,7 @@ const fetchChartData = async () => {
   lastUpdated.value = new Date();
 };
 
-watch(selectedCoinData, () => {
-  fetchChartData();
-});
-
+// Do not auto-fetch. Fetch will happen only when the user clicks the Fetch button.
 onMounted(() => {
   topCoins.value.forEach((coin, index) => {
     coinColors2.value[coin.id] = {
@@ -100,9 +95,12 @@ onMounted(() => {
       borderColor: colors[index].replace("0.5", "1"),
     };
   });
-
-  fetchChartData();
 });
+
+// Expose a button handler so fetching only occurs on user action
+function onFetchClick() {
+  fetchChartData();
+}
 
 function formatPrice(price) {
   if (price >= 1.01) return price.toFixed(2)
@@ -129,12 +127,15 @@ function formatPrice(price) {
     </h1>
     
 
-    <div class="w-full flex justify-center mb-4">
-      <select v-model="selectedCoinData" @change="fetchChartData" class="bg-[#121418] text-white p-2 rounded">
+    <div class="w-full flex justify-center mb-4 items-center gap-4">
+      <select v-model="selectedCoinData" class="bg-[#121418] text-white p-2 rounded">
         <option value="1DAY">1 hour (1DAY)</option>
         <option value="7DAY">1 week (7DAY)</option>
         <option value="1MTH">1 month (1MTH)</option>
       </select>
+      <button @click="onFetchClick" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        Fetch
+      </button>
     </div>
     <div v-for="coin in topCoins" :key="coin.id" className="w-[45%] mb-6">
       <h2 class="text-white font-bold text-center mb-2">{{ coin.symbol }} Price</h2>
